@@ -1,0 +1,251 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Mail to Professors</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            padding: 5%;
+            background: #f4f4f4;
+            padding-top: 100px;
+        }
+        .navbar {
+            width: 100%;
+            background: #007bff;
+            color: #fff;
+            padding: 15px 20px;
+            font-size: 20px;
+            font-weight: bold;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 5px 10px;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .search-container {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+        }
+        .search-bar {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .generate-mail {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 15px;
+            font-size: 16px;
+            color: white;
+            background: #28a745;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+    <style>
+        h2 {
+            color: #333;
+        }
+
+        .table-container {
+            width: 90%;
+            margin: auto;
+            overflow-x: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        table {
+            width: 100%;
+            width: 900px;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>    
+</head>
+<body>
+    <div class="navbar">
+        <div>
+            <a href="{% url 'home' %}" style="text-decoration: none;"></i> My App</a>
+        </div>
+        <div class="nav-links">
+            <a href="{% url 'home' %}"><i class="fas fa-home"></i>Home</a>
+            <a href="#"><i class="fas fa-user"></i></a>
+            <a href="{% url 'login' %}"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </div>
+    
+    <div class="search-container">
+        <select id="profDropdown" class="search-bar">
+            <option value="">Select a Professor</option>
+            {% for professor in professors %}
+                <option value="{{ professor.0 }}" data-tags="{{ professor.4 }}">{{ professor.0 }}</option>
+            {% endfor %}
+        </select>
+        
+        <select id="tagDropdown" class="search-bar" style="display: none;">
+            <option value="">Select a Tag</option>
+        </select>
+        
+        <button id="generateMail" class="generate-mail">Generate Mail</button>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Website</th>
+                <th>Research Interest</th>
+                <th>Tags</th>
+                <th>Dept.</th>
+            </tr>
+        </thead>
+        <tbody id="profTable">
+            {% for professor in professors %}
+            <tr>
+                <td>{{ professor.0 }}</td>
+                <td><a href="{{ professor.1 }}" target="_blank">{{ professor.1 }}</a></td>
+                <td>{{ professor.2 }}</td>
+                <td>{{ professor.4 }}</td>
+                <td>{{ professor.3 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div id="emailContainer" style="display:none; margin-top: 20px; background: white; padding: 10px; border-radius: 5px;">
+        <h3>Generated Email:</h3>
+        <p id="emailOutput"></p>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const profDropdown = document.getElementById("profDropdown");
+            const tagDropdown = document.getElementById("tagDropdown");
+            const generateMail = document.getElementById("generateMail");
+            const rows = document.querySelectorAll("tbody tr");
+
+            profDropdown.addEventListener("change", function() {
+                const selectedProf = profDropdown.value;
+                tagDropdown.style.display = selectedProf ? "block" : "none";
+                generateMail.style.display = "none";
+                
+                // Clear previous options
+                tagDropdown.innerHTML = '<option value="">Select a Tag</option>';
+                
+                if (selectedProf) {
+                    const selectedOption = profDropdown.options[profDropdown.selectedIndex];
+                    const tags = selectedOption.dataset.tags.split(",");
+                    
+                    tags.forEach(tag => {
+                        let option = document.createElement("option");
+                        option.value = tag.trim();
+                        option.textContent = tag.trim();
+                        tagDropdown.appendChild(option);
+                    });
+                }
+                
+                // Show only selected professor's row
+                rows.forEach(row => {
+                    row.style.display = row.cells[0].textContent === selectedProf ? "" : "none";
+                });
+            });
+
+            tagDropdown.addEventListener("change", function() {
+                generateMail.style.display = tagDropdown.value ? "block" : "none";
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+    const generateMail = document.getElementById("generateMail");
+
+    generateMail.addEventListener("click", function() {
+        const professor = document.getElementById("profDropdown").value;
+        const tag = document.getElementById("tagDropdown").value;
+
+        fetch("{% url 'generate_mail' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ professor: professor, tag: tag })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.email) {
+                document.getElementById("emailOutput").innerText = data.email;
+                document.getElementById("emailContainer").style.display = "block";
+            } else if (data.error) {
+                console.error("Error:", data.error);
+                alert("Error generating email: " + data.error);
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+});
+
+    </script>
+</body>
+</html>
