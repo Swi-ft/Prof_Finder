@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import google.generativeai as genai
 import os
+from django.conf import settings
 from dotenv import load_dotenv
 
 
@@ -21,7 +22,7 @@ genai.configure(api_key=GENAI_API_KEY)
 def home(request):
     professors = []
     all_tags = set()
-    file_path = "C:/Users/hello/prof_finder/static/usr/cse_profs.csv"
+    file_path = os.path.join(settings.BASE_DIR, "static", "usr", "cse_profs.csv")
     with open(file_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
         headers = next(reader)  # Skip header row
@@ -32,7 +33,7 @@ def home(request):
             all_tags.update(tags) 
 
 
-    file_path = "C:/Users/hello/prof_finder/static/usr/aero_profs.csv"
+    file_path = os.path.join(settings.BASE_DIR, "static", "usr", "aero_profs.csv")
     with open(file_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
         headers = next(reader)  # Skip header row
@@ -43,7 +44,7 @@ def home(request):
             all_tags.update(tags) 
 
 
-    file_path = "C:/Users/hello/prof_finder/static/usr/ee_profs.csv"
+    file_path = os.path.join(settings.BASE_DIR, "static", "usr", "ee_profs.csv")
     with open(file_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
         headers = next(reader)  # Skip header row
@@ -53,7 +54,7 @@ def home(request):
             tags = list(dict.fromkeys(tag.strip() for tag in tags_column.split(',')))
             all_tags.update(tags) 
 
-    file_path = "C:/Users/hello/prof_finder/static/usr/mech_profs.csv"
+    file_path = os.path.join(settings.BASE_DIR, "static", "usr", "mech_profs.csv")
     with open(file_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
         headers = next(reader)  # Skip header row
@@ -63,7 +64,7 @@ def home(request):
             tags = list(dict.fromkeys(tag.strip() for tag in tags_column.split(',')))
             all_tags.update(tags) 
 
-    file_path = "C:/Users/hello/prof_finder/static/usr/math_profs.csv"
+    file_path = os.path.join(settings.BASE_DIR, "static", "usr", "math_profs.csv")
     with open(file_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
         headers = next(reader)  # Skip header row
@@ -82,11 +83,11 @@ def mailing(request):
     professors = []
     all_tags = set()
     csv_files = [
-        "C:/Users/hello/prof_finder/templates/usr/cse_profs.csv",
-        "C:/Users/hello/prof_finder/templates/usr/aero_profs.csv",
-        "C:/Users/hello/prof_finder/templates/usr/ee_profs.csv",
-        "C:/Users/hello/prof_finder/templates/usr/mech_profs.csv",
-        "C:/Users/hello/prof_finder/templates/usr/math_profs.csv"
+        os.path.join(settings.BASE_DIR, "static", "usr", "cse_profs.csv"),
+        os.path.join(settings.BASE_DIR, "static", "usr", "aero_profs.csv"),
+        os.path.join(settings.BASE_DIR, "static", "usr", "ee_profs.csv"),
+        os.path.join(settings.BASE_DIR, "static", "usr", "mech_profs.csv"),
+        os.path.join(settings.BASE_DIR, "static", "usr", "math_profs.csv")
     ]
     
     for file_path in csv_files:
